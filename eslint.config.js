@@ -31,7 +31,8 @@ export default [
         BookingService: "readonly",
         BookingCtrl: "readonly",
         InvoiceCalc: "readonly",
-        InvoiceCtrl: "readonly"
+        InvoiceCtrl: "readonly",
+        ExpenseCtrl: "readonly"
       },
     },
     rules: {
