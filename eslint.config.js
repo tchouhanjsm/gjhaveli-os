@@ -20,6 +20,7 @@ export default [
         UrlFetchApp: "readonly",
         HtmlService: "readonly",
         LockService: "readonly",
+        DriveApp: "readonly", // Added for Drive operations
         
         // System Config & Storage Layers
         CONFIG: "writable",

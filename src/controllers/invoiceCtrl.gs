@@ -1,67 +1,109 @@
 /**
- * Invoice Controller Layer
+ * Invoice Controller Layer with PDF Remote API Sync
  * gjhaveli-os
  */
 
 const InvoiceCtrl = {
   /**
+   * Main processor for handling and building external PDFs
+   * @param {Object} payloadData - Constructed schema model
+   * @param {string} invoiceId
+   * @return {string} Shared Google Drive download URL
+   */
+  generateAndSavePDF(payloadData, invoiceId) {
+    const url = "https://invoice-generator.com";
+
+    const options = {
+      method: "post",
+      contentType: "application/json",
+      payload: JSON.stringify(payloadData),
+      muteHttpExceptions: true
+    };
+
+    // If API Key configuration exists, inject bearer permissions
+    if (CONFIG.INVOICE_GENERATOR_API_KEY) {
+      options.headers = {
+        Authorization: "Bearer " + CONFIG.INVOICE_GENERATOR_API_KEY
+      };
+    }
+
+    // Call the external API
+    const response = UrlFetchApp.fetch(url, options);
+
+    if (response.getResponseCode() !== 200) {
+      throw new Error(
+        "Failed to generate PDF invoice from remote engine: " + response.getContentText()
+      );
+    }
+
+    // Capture binary file content stream
+    const pdfBlob = response.getBlob().setName(`${invoiceId}.pdf`);
+
+    // Write file directly into Google Drive architecture folder
+    const folder = DriveApp.getFolderById(CONFIG.INVOICE_DRIVE_FOLDER_ID);
+    const file = folder.createFile(pdfBlob);
+
+    // Grant read accessibility settings
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+    return file.getUrl();
+  },
+
+  /**
    * Automated Trigger for Checkout operations
-   * @param {string} bookingId
-   * @return {Object} Invoice results
    */
   autoCreateOnCheckout(bookingId) {
     try {
-      // 1. Fetch booking record
       const booking = DB.findByKey(CONFIG.SHEETS.BOOKINGS, "id", bookingId);
       if (!booking) throw new Error("Booking record not found.");
 
-      // 2. Fetch room pricing metadata
       const room = DB.findByKey(CONFIG.SHEETS.ROOMS, "id", booking.room_id);
       if (!room) throw new Error("Linked room assets not found.");
 
-      // 3. Compute Invoice Math
-      const pricing = InvoiceCalc.calculateRoomStay(
-        booking.check_in_date,
-        booking.check_out_date,
-        Number(room.price_per_night)
-      );
+      // Calculate length of stay nights
+      const checkIn = new Date(booking.check_in_date);
+      const checkOut = new Date(booking.check_out_date);
+      const nights =
+        Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)) || 1;
 
-      const newInvoice = {
-        id: "INV-" + Math.random().toString(36).substr(2, 9).toUpperCase(),
+      const basePrice = Number(room.price_per_night);
+      const subtotal = nights * basePrice;
+      const calculatedTotal = subtotal + subtotal * (CONFIG.TAX_RATE_GST / 100);
+
+      const invoiceId = "INV-" + Math.random().toString(36).substr(2, 9).toUpperCase();
+
+      const tempInvoiceMeta = {
+        id: invoiceId,
         booking_id: bookingId,
-        amount: pricing.baseAmount,
-        tax: pricing.tax,
-        total: pricing.total,
+        amount: subtotal,
+        tax: subtotal * (CONFIG.TAX_RATE_GST / 100),
+        total: calculatedTotal,
         status: "Unpaid",
         created_at: new Date().toISOString()
       };
 
-      // 4. Record to Database sheet
-      DB.insert(CONFIG.SHEETS.INVOICES, newInvoice);
-      return { success: true, data: newInvoice };
-    } catch (e) {
-      return { success: false, message: e.message };
-    }
-  },
+      // Compile items array for the PDF layout generator
+      const items = [
+        {
+          name: `Room Stay - Room ${room.room_number} (${room.type})`,
+          quantity: nights,
+          unit_cost: basePrice,
+          description: `Stay from ${booking.check_in_date} to ${booking.check_out_date}`
+        }
+      ];
 
-  /**
-   * Manual manual creation form input override
-   */
-  createManualInvoice(formData) {
-    try {
-      const newInvoice = {
-        id: "INV-" + Math.random().toString(36).substr(2, 9).toUpperCase(),
-        booking_id: formData.booking_id || "MANUAL_BILL",
-        amount: Number(formData.amount),
-        tax: Number(formData.tax || 0),
-        total: Number(formData.amount) + Number(formData.tax || 0),
-        status: formData.status || "Unpaid",
-        created_at: new Date().toISOString()
-      };
+      const payload = InvoiceCalc.buildGeneratorPayload(tempInvoiceMeta, booking, items);
 
-      DB.insert(CONFIG.SHEETS.INVOICES, newInvoice);
-      return { success: true, data: newInvoice };
+      // Execute pipeline connection out to API and fetch cloud Drive path link
+      const driveUrl = this.generateAndSavePDF(payload, invoiceId);
+
+      // Append final records containing reference tracking links into Database sheet
+      tempInvoiceMeta.pdf_url = driveUrl; // Ensure this header exists in your invoices sheet tab columns!
+      DB.insert(CONFIG.SHEETS.INVOICES, tempInvoiceMeta);
+
+      return { success: true, message: "Invoice PDF created successfully", url: driveUrl };
     } catch (e) {
+      Logger.log("[INVOICE ERROR] " + e.toString());
       return { success: false, message: e.message };
     }
   }
