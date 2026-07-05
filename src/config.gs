@@ -4,11 +4,12 @@
  */
 
 const CONFIG = {
-  // Application Metadata
+  // PASTE YOUR COPIED SPREADSHEET ID HERE
+  SPREADSHEET_ID: "1tQcjQzYYpSrEOkJFsfY_YVddNVgvL2UeRxIsS4c05BE",
+
   APP_NAME: "GarhJaisal Operating System (gjhaveli-os)",
   VERSION: "1.0.0",
 
-  // Database Sheet Names
   SHEETS: {
     ROOMS: "rooms",
     BOOKINGS: "bookings",
@@ -17,7 +18,6 @@ const CONFIG = {
     USERS: "users"
   },
 
-  // Role Definitions
   ROLES: {
     ADMIN: "admin",
     MANAGER: "manager",

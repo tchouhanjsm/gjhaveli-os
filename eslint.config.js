@@ -4,7 +4,7 @@ import configPrettier from "eslint-config-prettier";
 
 export default [
   js.configs.recommended,
-  configPrettier, // Disables ESLint rules that might conflict with Prettier
+  configPrettier,
   {
     files: ["src/**/*.gs", "src/**/*.js"],
     plugins: {
@@ -14,22 +14,30 @@ export default [
       ecmaVersion: 2022,
       sourceType: "module",
       globals: {
+        // Native Google Engines
         SpreadsheetApp: "readonly",
         Logger: "readonly",
         UrlFetchApp: "readonly",
         HtmlService: "readonly",
         LockService: "readonly",
+        
+        // System Config & Storage Layers
         CONFIG: "writable",
         DB: "writable",
-        RBAC: "writable"
+        RBAC: "writable",
+
+        // Domain-Driven Business Services & Controllers
+        BookingService: "readonly",
+        BookingCtrl: "readonly",
+        InvoiceCalc: "readonly",
+        InvoiceCtrl: "readonly"
       },
     },
     rules: {
-      "prettier/prettier": "error", // Throws an error if code isn't formatted cleanly
+      "prettier/prettier": "error",
       "no-console": "off",
       "semi": ["error", "always"],
-      // Modify unused-vars to ignore top-level global variables unique to Apps Script
-      "no-unused-vars": "off"
+      "no-unused-vars": "off" 
     }
   }
 ];
