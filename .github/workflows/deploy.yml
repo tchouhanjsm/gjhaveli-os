@@ -3,8 +3,7 @@ name: GarhJaisal CI/CD
 on:
   push:
     branches:
-      - main
-      - develop # Runs checks on develop too, but stops before deploy
+      - "**" # 🚀 This tells GitHub to run the Lint checks on ANY branch push!
 
 jobs:
   lint:
@@ -27,7 +26,7 @@ jobs:
 
   deploy:
     needs: lint
-    # ONLY push to Google Apps Script if changes land on the 'main' branch
+    # 🔒 Safety Gate: ONLY deploy via Clasp if changes land on the 'main' branch
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
