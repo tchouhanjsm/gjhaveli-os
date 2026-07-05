@@ -4,8 +4,8 @@
   "description": "Hotel Front Desk Portal App Backend",
   "type": "module",
   "scripts": {
-    "lint": "eslint src/**/*.js",
-    "prepare": "husky"
+  "lint": "eslint \"src/**/*.{js,gs}\"",
+  "lint:fix": "eslint \"src/**/*.{js,gs}\" --fix"
   },
   "keywords": [],
   "author": "",
@@ -13,11 +13,14 @@
   "devDependencies": {
     "@eslint/js": "^9.22.0",
     "@google/clasp": "^3.3.0",
-    "eslint": "^9.22.0",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
     "husky": "^9.1.7",
-    "lint-staged": "^17.0.8"
+    "lint-staged": "^17.0.8",
+    "prettier": "^3.9.4"
   },
   "lint-staged": {
-    "src/**/*.js": "eslint"
+    "src/**/*.{js,gs}": "eslint"
   }
 }
