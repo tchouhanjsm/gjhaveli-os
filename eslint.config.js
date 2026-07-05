@@ -21,6 +21,7 @@ export default [
         HtmlService: "readonly",
         LockService: "readonly",
         DriveApp: "readonly", // Added for Drive operations
+        Session: "readonly",
         
         // System Config & Storage Layers
         CONFIG: "writable",
