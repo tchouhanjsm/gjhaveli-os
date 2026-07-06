@@ -1,0 +1,8 @@
+# Ignore all dotfiles and system files by default
+**/*
+.*
+
+# Force clasp to grab and flatten your source files
+!src/**/*.gs
+!src/**/*.html
+!package.json
