@@ -26,7 +26,6 @@ jobs:
 
   deploy:
     needs: lint
-    # 🔒 Safety Gate: ONLY deploy via Clasp if changes land on the 'main' branch
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
@@ -45,6 +44,11 @@ jobs:
       - name: Authenticate with Google Clasp
         run: |
           echo '${{ secrets.CLASPRC_JSON }}' > "$HOME/.clasprc.json"
+
+      # 🚀 CRITICAL FIX: Dynamically reconstruct the missing project reference file
+      - name: Restore Project Settings Configuration
+        run: |
+          echo '${{ secrets.CLASP_JSON }}' > .clasp.json
 
       - name: Push to Google Apps Script
         run: npx clasp push --force
