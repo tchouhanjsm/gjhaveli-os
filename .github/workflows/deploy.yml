@@ -3,7 +3,7 @@ name: GarhJaisal CI/CD
 on:
   push:
     branches:
-      - "**" # 🚀 This tells GitHub to run the Lint checks on ANY branch push!
+      - "**"
 
 jobs:
   lint:
@@ -43,12 +43,13 @@ jobs:
 
       - name: Authenticate with Google Clasp
         run: |
-          echo '${{ secrets.CLASPRC_JSON }}' > "$HOME/.clasprc.json"
+          # Safely decode the credentials without shell text interference
+          echo "${{ secrets.CLASPRC_JSON }}" | base64 --decode > "$HOME/.clasprc.json"
 
-      # 🚀 CRITICAL FIX: Dynamically reconstruct the missing project reference file
       - name: Restore Project Settings Configuration
         run: |
-          echo '${{ secrets.CLASP_JSON }}' > .clasp.json
+          # Safely decode the project configuration file
+          echo "${{ secrets.CLASP_JSON }}" | base64 --decode > .clasp.json
 
       - name: Push to Google Apps Script
         run: npx clasp push --force

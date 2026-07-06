@@ -1,7 +1,7 @@
 /**
  * Main Application Entry Point Router
- * Web App HTTP Interface Gateway (doPost Engine)
- * gjhaveli-os
+ * Web App HTTP Interface Gateway (doPost & doGet Engine)
+ * Project: gjhaveli-os
  */
 
 /**
@@ -106,10 +106,24 @@ function compileJsonResponse(dataPayload) {
 }
 
 /**
- * Basic GET route validation hook to confirm API online status health indicators
+ * Core GET route hook to serve the compiled frontend portal interface
+ * @return {HtmlOutput}
  */
 function doGet() {
-  return HtmlService.createHtmlOutput(
-    `<h1>${CONFIG.APP_NAME}</h1><p>Backend API Engine Status: ONLINE (v${CONFIG.VERSION})</p>`
-  );
+  const template = HtmlService.createTemplateFromFile("index");
+
+  return template
+    .evaluate()
+    .setTitle(CONFIG.APP_NAME)
+    .addMetaTag("viewport", "width=device-width, initial-scale=1.0")
+    .setXFrameOptionsMode(HtmlService.SandboxMode.IFRAME);
+}
+
+/**
+ * Server-side include helper to inject modular HTML sub-files into index.html
+ * @param {string} filename
+ * @return {string} Raw HTML content string
+ */
+function include(filename) {
+  return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
